@@ -15,12 +15,17 @@ const userRoutes = require('./routes/user.routes');
 const postRoutes = require('./routes/post.routes');
 
 
+const adminRoutes = require('./routes/admin.routes');
+
+
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
 app.use('/api/users', userRoutes);
 app.use('/api/posts', postRoutes);
+
+app.use('/api/admin', adminRoutes);
 
 // Routes
 app.use('/api/auth', authRoutes);
