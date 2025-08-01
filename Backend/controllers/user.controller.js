@@ -1,20 +1,25 @@
 const User = require('../models/user.model');
 
-// Get all users (Admin only)
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await User.find().select('-password');
+    const filter = {};
+    
+    if (req.query.role) {
+      filter.role = req.query.role;
+    }
+    if (req.query.status) {
+      filter.status = req.query.status;
+    }
+    const users = await User.find(filter).select('-password');
     res.json(users);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// Get single user by ID (Admin only or self)
 exports.getUserById = async (req, res) => {
   try {
     const { id } = req.params;
-    // Allow admin or user themself
     if (req.user.role !== 'admin' && req.user.userId !== id) {
       return res.status(403).json({ error: 'Forbidden' });
     }
@@ -26,13 +31,11 @@ exports.getUserById = async (req, res) => {
   }
 };
 
-// Update user (Admin can update any, user can update self)
 exports.updateUser = async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
 
-    // Only admin or self can update, but only admin can change role/status
     if (req.user.role !== 'admin' && req.user.userId !== id) {
       return res.status(403).json({ error: 'Forbidden' });
     }
@@ -41,7 +44,6 @@ exports.updateUser = async (req, res) => {
       delete updates.status;
     }
 
-    // Do not allow password update here
     delete updates.password;
 
     const user = await User.findByIdAndUpdate(id, updates, { new: true }).select('-password');
@@ -52,14 +54,12 @@ exports.updateUser = async (req, res) => {
   }
 };
 
-// Delete/disable user (Admin only)
 exports.deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
     if (req.user.role !== 'admin') {
       return res.status(403).json({ error: 'Forbidden' });
     }
-    // Soft delete: set status to 'disabled'
     const user = await User.findByIdAndUpdate(id, { status: 'disabled' }, { new: true }).select('-password');
     if (!user) return res.status(404).json({ error: 'User not found' });
     res.json({ message: 'User disabled', user });

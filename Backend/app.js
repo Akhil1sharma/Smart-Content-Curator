@@ -16,7 +16,7 @@ const postRoutes = require('./routes/post.routes');
 
 
 const adminRoutes = require('./routes/admin.routes');
-
+const workflowRoutes = require('./routes/workflow.routes');
 
 // Middleware
 app.use(cors());
@@ -27,7 +27,7 @@ app.use('/api/posts', postRoutes);
 
 app.use('/api/admin', adminRoutes);
 
-// Routes
+app.use('/api/workflows', workflowRoutes);
 app.use('/api/auth', authRoutes);
 
 // Health check
