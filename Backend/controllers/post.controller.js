@@ -1,6 +1,5 @@
 const Post = require('../models/post.model');
 
-// Create Post (User/AI)
 exports.createPost = async (req, res) => {
   try {
     const post = new Post({
@@ -15,7 +14,6 @@ exports.createPost = async (req, res) => {
   }
 };
 
-// Get all posts (Admin: all, User: own)
 exports.getPosts = async (req, res) => {
   try {
     let query = {};
@@ -30,7 +28,6 @@ exports.getPosts = async (req, res) => {
   }
 };
 
-// Get single post (Admin: any, User: only own)
 exports.getPostById = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id).populate('author', 'name email role');
@@ -44,13 +41,11 @@ exports.getPostById = async (req, res) => {
   }
 };
 
-// Update post (Admin: any, User: only own+not published)
 exports.updatePost = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
     if (!post) return res.status(404).json({ error: 'Post not found' });
 
-    // Only admin or owner can update. Only drafts/scheduled are editable by user.
     if (req.user.role !== 'admin' && post.author.toString() !== req.user.userId) {
       return res.status(403).json({ error: 'Forbidden' });
     }
@@ -58,7 +53,6 @@ exports.updatePost = async (req, res) => {
       return res.status(400).json({ error: 'Cannot edit published or reviewed posts' });
     }
 
-    // Prevent users from changing status to published
     if (req.user.role !== 'admin') {
       delete req.body.status;
       delete req.body.publishedAt;
@@ -72,7 +66,6 @@ exports.updatePost = async (req, res) => {
   }
 };
 
-// Delete post (Admin: any, User: only own draft)
 exports.deletePost = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
@@ -91,12 +84,11 @@ exports.deletePost = async (req, res) => {
   }
 };
 
-// Admin: Approve/Reject post
 exports.reviewPost = async (req, res) => {
   try {
     if (req.user.role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
     const { id } = req.params;
-    const { action, comment } = req.body; // action: 'approve' or 'reject'
+    const { action, comment } = req.body; 
     const post = await Post.findById(id);
     if (!post) return res.status(404).json({ error: 'Post not found' });
     if (!['pending'].includes(post.status)) return res.status(400).json({ error: 'Only pending posts can be reviewed' });
@@ -119,3 +111,43 @@ exports.reviewPost = async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 };
+
+exports.getWeeklyDigest = async (req, res) => {
+  try {
+    
+    const since = new Date();
+    since.setDate(since.getDate() - 7);
+
+    let query = { createdAt: { $gte: since } };
+
+    if (req.user.role !== 'admin') {
+      query.author = req.user.userId;
+    }
+
+    const posts = await Post.find(query)
+      .populate('author', 'name email role')
+      .sort({ createdAt: -1 });
+
+    res.json({
+      total: posts.length,
+      posts,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+exports.getDraftPosts = async (req, res) => {
+  try {
+    let query = { status: 'draft' };
+    if (req.user.role !== 'admin') {
+      query.author = req.user.userId;
+    }
+    const drafts = await Post.find(query)
+      .populate('author', 'name email role')
+      .sort({ createdAt: -1 });
+    res.json({ drafts });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
