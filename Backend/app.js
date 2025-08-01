@@ -26,7 +26,6 @@ app.use('/api/users', userRoutes);
 app.use('/api/posts', postRoutes);
 
 app.use('/api/admin', adminRoutes);
-
 app.use('/api/workflows', workflowRoutes);
 app.use('/api/auth', authRoutes);
 

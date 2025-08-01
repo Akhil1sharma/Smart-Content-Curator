@@ -44,3 +44,12 @@ exports.getAllPosts = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+exports.getAnalyticsReport = async (req, res) => {
+  try {
+    const report = await analyticsService.getWeeklyAnalytics();
+    res.json(report);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

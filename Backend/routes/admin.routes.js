@@ -16,4 +16,7 @@ router.get('/analytics', adminController.getSystemAnalytics);
 // View/moderate all posts (with status filter)
 router.get('/posts', adminController.getAllPosts);
 
+// Analytics report endpoint
+router.get('/analytics/report', adminController.getAnalyticsReport);
+
 module.exports = router;
